@@ -60,19 +60,18 @@ int main(int argc, char** argv)
 	string eq0,eqj;
 	char* num[100];
 	FILE * ofp = fopen("outp.txt", "w");
+	fprintf(ofp, "%d\n",num_eq);
 	for(int i=0;i<n;++i){
 		int done = 0;
 		eq0.clear();
 		eq0 += "r";
-		eq0+=to_string(i);
-		eq0+="0";
-		printf("iter bg %d\n",i);
-		fflush(stdout);
+		eq0+=to_string(i+1);
+		eq0+="1";
 		for(int k=0;k<dimension[n]/kn[i];++k) {
 			int smallk =k%dimension[i];
 			int curk = (k-smallk)*kn[i]+smallk;
 			int idc = 0;
-			if(util[curk][i]>=0 && k!=0){
+			if(util[curk][i]>=0 ){
 				eq0+=" + ";
 			}
 			
@@ -80,12 +79,13 @@ int main(int argc, char** argv)
 			for(int w=n-1;w>=0;--w){
 				currentIndex[w] = curk/dimension[w];
 				curk = curk%dimension[w];
+				if(w==i)continue;
 				eq0+=" * ";
 				eq0+="x";
 				
 				eq0+=to_string(w+1);
 				
-				eq0+=to_string(currentIndex[w]);
+				eq0+=to_string(currentIndex[w]+1);
 				
 			}
 			
@@ -96,14 +96,14 @@ int main(int argc, char** argv)
 			eqj.clear();
 			eqj += "r";
 			
-			eqj+=to_string(i);
+			eqj+=to_string(i+1);
 			
-			eqj+=to_string(j);
+			eqj+=to_string(j+1);
 			for(int k=0;k<dimension[n]/kn[i];++k) {
 				int smallk =k%dimension[i];
-				int curk = (k-smallk)*kn[i]+smallk;
+				int curk = (k-smallk)*kn[i] + smallk + dimension[i]*j;
 				int idc = 0;
-				if(util[curk][i]>=0 && k!=0){
+				if(util[curk][i]>=0){
 					eqj+=" + ";
 				}
 				
@@ -111,12 +111,13 @@ int main(int argc, char** argv)
 				for(int w=n-1;w>=0;--w){
 					currentIndex[w] = curk/dimension[w];
 					curk = curk%dimension[w];
+					if(w==i)continue;
 					eqj+=" * ";
 					eqj+="x";
 					
 					eqj+=to_string(w+1);
 					
-					eqj+=to_string(currentIndex[w]);;
+					eqj+=to_string(currentIndex[w]+1);;
 					
 				}
 				
@@ -124,6 +125,19 @@ int main(int argc, char** argv)
 			eqj += " - ( "+ eq0 + " );";
 			fprintf(ofp, "%s\n",eqj.c_str());
 		}
+	}
+	for(int i=0;i<n;++i){
+		string eo;
+		for(int j=0;j<kn[i];++j){
+			eo+="x";
+			eo+=to_string(i+1);
+			eo+=to_string(j+1);
+			eo+=" + ";
+			fprintf(ofp, "r%d%d * x%d%d ;\n",i+1,j+1,i+1,j+1);
+			
+		}
+		eo+=" - 1;";
+		fprintf(ofp, "%s\n",eo.c_str());
 	}
 	fclose(ofp);
 }
