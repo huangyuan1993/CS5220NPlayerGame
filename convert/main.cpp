@@ -8,15 +8,10 @@
 #include <ctime>
 #include <vector>
 #include <sstream>
-#include "pstream.h"
 using namespace std;
-using redi::pstream;
-#define PZERO 0.00000000001f
-#define MZERO -0.00000000001f
 int main(int argc, char** argv)
 {
 	FILE * ifp = fopen(argv[1], "r");
-	
 	int n = 0;
 	char ch[100];
 	fscanf(ifp, "%d", &n);
@@ -59,13 +54,13 @@ int main(int argc, char** argv)
 		fscanf(ifp, "]");
 	}
 	fclose(ifp);
-	vector<string> eqs;
+	
 	//construct equation
 	int num_eq = sumall*2;
 	string eq0,eqj;
-	char num[1000];
-	//FILE * ofp = fopen("outp.txt", "w");
-	//fprintf(ofp, "%d\n",num_eq);
+	char* num[100];
+	FILE * ofp = fopen("outp.txt", "w");
+	fprintf(ofp, "%d\n",num_eq);
 	for(int i=0;i<n;++i){
 		int done = 0;
 		eq0.clear();
@@ -86,22 +81,24 @@ int main(int argc, char** argv)
 				curk = curk%dimension[w];
 				if(w==i)continue;
 				eq0+=" * ";
-				eq0+="x";		
+				eq0+="x";
+				
 				eq0+=to_string(w+1);
+				
 				eq0+=to_string(currentIndex[w]+1);
+				
 			}
 			
 		}
 		
+		printf("cons1");
 		for(int j=1;j<kn[i];++j){
 			eqj.clear();
-			//using r
 			eqj += "r";
 			
 			eqj+=to_string(i+1);
 			
 			eqj+=to_string(j+1);
-			//using r
 			for(int k=0;k<dimension[n]/kn[i];++k) {
 				int smallk =k%dimension[i];
 				int curk = (k-smallk)*kn[i] + smallk + dimension[i]*j;
@@ -126,7 +123,7 @@ int main(int argc, char** argv)
 				
 			}	
 			eqj += " - ( "+ eq0 + " );";
-			eqs.push_back(string(eqj.c_str()));
+			fprintf(ofp, "%s\n",eqj.c_str());
 		}
 	}
 	for(int i=0;i<n;++i){
@@ -136,81 +133,12 @@ int main(int argc, char** argv)
 			eo+=to_string(i+1);
 			eo+=to_string(j+1);
 			eo+=" + ";
+			fprintf(ofp, "r%d%d * x%d%d ;\n",i+1,j+1,i+1,j+1);
 			
-			
-			sprintf(num, "r%d%d * x%d%d ;",i+1,j+1,i+1,j+1);
-			eqs.push_back(string(num));
 		}
 		eo+=" - 1;";
-		eqs.push_back(string(eo.c_str()));
+		fprintf(ofp, "%s\n",eo.c_str());
 	}
-	for(int i=0;i<eqs.size();++i){
-		printf("%s\n", eqs[i].c_str());
-	}
-	pstream phc; // for running phc
-	phc.open("./phc -b");
-	if(!phc.is_open())
-	{
-		printf("Could not open the phc pack executable.\n");
-	}
-	printf("n=%d\n",eqs.size());
-		// start inputting
-	phc << "n" << endl; // is system on input file? no
-	phc << num_eq << endl; // number of polynomials
-	phc << num_eq << endl; // number of unknowns
-	for(int i=0;i<eqs.size();++i){
-		phc << eqs[i].c_str()<<endl;
-	}
-	phc << "n" << endl;
-	string opstr;
-	vector<string> varname;
-	double* solution = (double*)malloc(num_eq*sizeof(double));
-	while(phc >> opstr)
-	{
-		if(opstr.compare("solution")==0){
-			phc >> opstr;
-			if(opstr.compare("for")==0){
-				phc >> opstr;//t
-				phc >> opstr;//:
-				//phc >> opstr;
-				bool done=1;
-				for(int i=0;i<num_eq;++i){
-					string vname;
-					double reald,compd;
-					phc >> vname; //variable name
-					phc >> opstr; //: skip
-					phc >> reald;
-					phc >> compd;
-					if(reald<MZERO){
-						done=0;
-						//printf("%f\n",reald);
-						break;
-					}
-					if(compd<MZERO||compd>PZERO){
-					
-						done=0;
-						//printf("%f\n",compd);
-						break;
-					}
-					solution[i] = reald;
-					varname.push_back(vname);
-					
-				}
-				
-				if(done){
-					for(int i=0;i<num_eq;++i){
-						printf("%s: %f\n",varname[i].c_str(),solution[i]);
-					}
-				}
-			}
-			else{
-				printf("%s\n",opstr.c_str());
-			}
-		}
-		
-	}
-	phc.clear();
-	phc.close();
-	//fclose(ofp);
+	fclose(ofp);
 }
 	
