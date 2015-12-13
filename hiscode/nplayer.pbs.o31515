@@ -1,0 +1,8 @@
+Node 2: Loaded data in 0.000340939 seconds
+Node Node 0: Loaded data in 1: Loaded data in 0.000363827 seconds
+0.000381947 seconds
+Node 0: found solution for {(1, 3), (1, 3)}
+x21 -> 0.041510, x23 -> 0.958490, x11 -> 0.728982, x13 -> 0.271018
+Node 0: Ran 5 combinations in 0.0671868 seconds
+Node 2: Ran 5 combinations in 0.0674262 seconds
+Node 1: Ran 6 combinations in 0.0803211 seconds

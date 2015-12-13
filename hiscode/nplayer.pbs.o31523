@@ -1,0 +1,8 @@
+Node 5: Loaded data in 0.000517845 seconds
+Node 4: Loaded data in Node 3: Loaded data in 0.00054884 seconds
+0.000560999 seconds
+Node 0: Loaded data in Node 1: Loaded data in Node 2: Loaded data in 0.000641108 seconds
+0.000651836 seconds
+0.000648975 seconds
+Node 5: Ran 10 combinations in 0.132429 seconds
+APPLICATION TERMINATED WITH THE EXIT STRING: Broken pipe (signal 13)
