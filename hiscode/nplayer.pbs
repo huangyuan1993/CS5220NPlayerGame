@@ -1,10 +1,10 @@
-!/bin/sh -l
+#!/bin/sh -l
 
 #PBS -l nodes=1:ppn=24
 #PBS -l walltime=0:30:00
-#PBS -N lshallow
+#PBS -N nplayer
 #PBS -j oe
 
 module load cs5220
 cd $PBS_O_WORKDIR
-mpirun -n 2 nplayer_se 3.3.game 
+mpirun -np 2 nplayer_se 2.3.game 
