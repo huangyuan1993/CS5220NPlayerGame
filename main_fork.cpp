@@ -16,7 +16,7 @@ using namespace std;
 using redi::pstream;
 #define PZERO 0.00001f
 #define MZERO -0.00001f
-#define NUMP 2
+#define NUMP 15
 int main(int argc, char** argv)
 {
 	FILE * ifp = fopen(argv[1], "r");
