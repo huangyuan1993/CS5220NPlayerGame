@@ -9,14 +9,20 @@
 #include <vector>
 #include <sstream>
 #include "pstream.h"
+#include <sys/time.h>
 using namespace std;
 using redi::pstream;
-#define PZERO 0.00000000001f
-#define MZERO -0.00000000001f
+#define PZERO 0.00001f
+#define MZERO -0.00001f
 int main(int argc, char** argv)
 {
 	FILE * ifp = fopen(argv[1], "r");
-	
+	struct timeval startTime, endTime;
+    long totalTime;
+    gettimeofday(&startTime, NULL);
+    
+
+
 	int n = 0;
 	char ch[100];
 	fscanf(ifp, "%d", &n);
@@ -59,6 +65,12 @@ int main(int argc, char** argv)
 		fscanf(ifp, "]");
 	}
 	fclose(ifp);
+	gettimeofday(&endTime, NULL);
+	totalTime =  (endTime.tv_sec - startTime.tv_sec) * 1000000L;
+    totalTime += (endTime.tv_usec - startTime.tv_usec);
+	printf("load time: %f sec\n",double(totalTime)/1000000);
+	gettimeofday(&startTime, NULL);
+	//startTime=clock();
 	vector<string> eqs;
 	//construct equation
 	int num_eq = sumall*2;
@@ -106,7 +118,7 @@ int main(int argc, char** argv)
 				int smallk =k%dimension[i];
 				int curk = (k-smallk)*kn[i] + smallk + dimension[i]*j;
 				int idc = 0;
-				if(util[curk][i]>=0){
+				if(util[curk][i]>=0){//k=1
 					eqj+=" + ";
 				}
 				
@@ -147,6 +159,7 @@ int main(int argc, char** argv)
 	for(int i=0;i<eqs.size();++i){
 		printf("%s\n", eqs[i].c_str());
 	}
+	
 	pstream phc; // for running phc
 	phc.open("./phc -b");
 	if(!phc.is_open())
@@ -170,6 +183,7 @@ int main(int argc, char** argv)
 		if(opstr.compare("solution")==0){
 			phc >> opstr;
 			if(opstr.compare("for")==0){
+				varname.clear();
 				phc >> opstr;//t
 				phc >> opstr;//:
 				//phc >> opstr;
@@ -198,19 +212,21 @@ int main(int argc, char** argv)
 				}
 				
 				if(done){
+					printf("solution:\n");
 					for(int i=0;i<num_eq;++i){
 						printf("%s: %f\n",varname[i].c_str(),solution[i]);
 					}
 				}
-			}
-			else{
-				printf("%s\n",opstr.c_str());
 			}
 		}
 		
 	}
 	phc.clear();
 	phc.close();
+	gettimeofday(&endTime, NULL);
+	totalTime =  (endTime.tv_sec - startTime.tv_sec) * 1000000L;
+    totalTime += (endTime.tv_usec - startTime.tv_usec);
+	printf("running time: %f sec\n",double(totalTime)/1000000);
 	//fclose(ofp);
 }
 	

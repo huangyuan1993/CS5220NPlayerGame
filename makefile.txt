@@ -1,0 +1,3 @@
+seq:
+g++ -std=c++11  main.cpp -o func
+mpicxx -std=c++11  main.cpp -o funcmpi
