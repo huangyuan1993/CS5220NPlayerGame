@@ -12,18 +12,23 @@
 #include "pstream.h"
 #include <sys/time.h>
 #include <unistd.h> 
+#include <functional>
 using namespace std;
 using redi::pstream;
 #define PZERO 0.00001f
 #define MZERO -0.00001f
+<<<<<<< HEAD
 #define NUMP 15
+=======
+#define NUMP 12
+>>>>>>> 70008b3ea8194a18a7e8dc51d401fe96cee62aa8
 int main(int argc, char** argv)
 {
 	FILE * ifp = fopen(argv[1], "r");
 	struct timeval startTime, endTime;
     long totalTime;
     gettimeofday(&startTime, NULL);
-	
+	hash<double> hs;
 	int status;
 
 
@@ -129,7 +134,7 @@ int main(int argc, char** argv)
 			int curmask = combmask[cnt]&(count>>shiftall[cnt]);
 			if(curmask==0)count+=(1<<shiftall[cnt]);
 		} 
-		if(count%n_sz!=cpid)continue;
+		if(hs(double(count))%n_sz!=cpid)continue;
 		idset.clear();
 		eqs.clear();
 		for(int i=0;i<n;++i){
@@ -378,7 +383,7 @@ int main(int argc, char** argv)
 			} else {
 				if (!WIFEXITED(status) || WEXITSTATUS(status) != 0) {
 					printf("error!!!");
-					exit(1);
+					//exit(1);
 				}
 			}
 		}
@@ -387,6 +392,7 @@ int main(int argc, char** argv)
 		totalTime += (endTime.tv_usec - startTime.tv_usec);
 		printf("running time: %f sec\n",double(totalTime)/1000000);
 	}
+	printf("pid: %d exit\n",cpid);
 	exit(0);
 	//fclose(ofp);
 }
