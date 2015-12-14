@@ -1,4 +1,4 @@
-#include <cstdio>
+ #include <cstdio>
 #include <cstdlib>
 #include <ctime>
 #include <string>
@@ -7,7 +7,9 @@
 #include <cctype>
 #include <ctime>
 #include <vector>
+#include <set>
 #include <sstream>
+#include "mpi.h"
 #include "pstream.h"
 #include <sys/time.h>
 using namespace std;
@@ -20,6 +22,8 @@ int main(int argc, char** argv)
 	struct timeval startTime, endTime;
     long totalTime;
     gettimeofday(&startTime, NULL);
+	
+	
 	int n_id, n_sz; 
 	MPI_Init(&argc, &argv); 
 	MPI_Comm_rank(MPI_COMM_WORLD, &n_id); 
@@ -39,6 +43,7 @@ int main(int argc, char** argv)
 
 	}
 	
+
 	int ** util = (int **)malloc(dimension[n] * sizeof(int*));
 	int * currentIndex = (int *)malloc(n* sizeof(int));
 	for(int i = 0;i<dimension[n];++i){
@@ -66,6 +71,7 @@ int main(int argc, char** argv)
 		fscanf(ifp, "]");
 	}
 	fclose(ifp);
+
 	gettimeofday(&endTime, NULL);
 	totalTime =  (endTime.tv_sec - startTime.tv_sec) * 1000000L;
     totalTime += (endTime.tv_usec - startTime.tv_usec);
@@ -74,112 +80,122 @@ int main(int argc, char** argv)
 	//startTime=clock();
 	vector<string> eqs;
 	//construct equation
-	int num_eq = sumall*2;
+	int num_eq = 0;
 	string eq0,eqj;
 	char num[1000];
 	//FILE * ofp = fopen("outp.txt", "w");
 	//fprintf(ofp, "%d\n",num_eq);
 	int combnum=1,shiftcnt=0,shiftmask;
-	int* combmask=(int*)malloc(*sizeof(int));
-	int* shiftall=(int*)malloc(*sizeof(int));
+	int* combmask=(int*)malloc(n*sizeof(int));
+	int* shiftall=(int*)malloc(n*sizeof(int));
 	for(int comb=0;comb<n;++comb)
 	{
 		shiftmask = (1<<kn[comb])-1;
-		combmask[comb]=shiftmask<<shiftcnt;
+		combmask[comb]=shiftmask;
 		shiftall[comb]=shiftcnt;
 		shiftcnt+=kn[comb];
 		
 	}
 	combnum<<=shiftcnt;
-	for(count=0;count<combnum;++count;){
-		
+	set<pair<int,int>> idset;
+	set<pair<int,int>>::iterator iter;
+
+	int count;
+	for(count=0;count<combnum;++count){
+	
+		num_eq = 0;
 		int valid = 1;
 		for(int cnt=0;cnt<n;++cnt){
-			int curmask = combmask(cnt)&count);
-			if(curmask==0)count+=(1<<shiftall[n]);
-		}
+			int curmask = combmask[cnt]&(count>>shiftall[cnt]);
+			if(curmask==0)count+=(1<<shiftall[cnt]);
+		} 
 		if(count%n_sz!=n_id)continue;
+		idset.clear();
+		eqs.clear();
 		for(int i=0;i<n;++i){
-			int done = 0;
-			eq0.clear();
-			eq0 += "r";
-			eq0+=to_string(i+1);
-			eq0+="1";
-			for(int k=0;k<dimension[n]/kn[i];++k) {
-				int smallk =k%dimension[i];
-				int curk = (k-smallk)*kn[i]+smallk;
-				int idc = 0;
-				if(util[curk][i]>=0 ){
-					eq0+=" + ";
+			int curnum = (count>>shiftall[i]) & combmask[i];
+			for(int j=0;j<kn[i];++j){
+				if((curnum&1)){
+					idset.insert(pair<int,int>(i,j));
+					num_eq++;
 				}
-				
-				eq0+=to_string(util[curk][i]);
-				for(int w=n-1;w>=0;--w){
-					currentIndex[w] = curk/dimension[w];
-					curk = curk%dimension[w];
-					if(w==i)continue;
-					eq0+=" * ";
-					eq0+="x";		
-					eq0+=to_string(w+1);
-					eq0+=to_string(currentIndex[w]+1);
-				}
-				
+				curnum>>=1;
 			}
+		}
+		for(int i=0;i<n;++i){
 			
-			for(int j=1;j<kn[i];++j){
+
+			int done = 0;
+			int cntcure = 0;
+			for(int j=0;j<kn[i];++j){
+				iter = idset.find(pair<int,int>(i,j));
+				if(iter==idset.end()){
+					continue;
+				}
 				eqj.clear();
-				//using r
-				eqj += "r";
-				
-				eqj+=to_string(i+1);
-				
-				eqj+=to_string(j+1);
-				//using r
 				for(int k=0;k<dimension[n]/kn[i];++k) {
 					int smallk =k%dimension[i];
 					int curk = (k-smallk)*kn[i] + smallk + dimension[i]*j;
 					int idc = 0;
-					if(util[curk][i]>=0){//k=1
-						eqj+=" + ";
+					int validcur=1;
+					string tmpstr;
+					if(util[curk][i]>=0){//
+						tmpstr+=" + ";
 					}
 					
-					eqj+=to_string(util[curk][i]);
+					tmpstr+=to_string(util[curk][i]);
 					for(int w=n-1;w>=0;--w){
 						currentIndex[w] = curk/dimension[w];
 						curk = curk%dimension[w];
 						if(w==i)continue;
-						eqj+=" * ";
-						eqj+="x";
+						int curnum = (count>>shiftall[i]) & combmask[i];
+						iter = idset.find(pair<int,int>(w,currentIndex[w]));
+						if(iter==idset.end()){
+							validcur =0;
+							break;
+						}
+									
+						tmpstr+=" * ";
+						tmpstr+="x";
 						
-						eqj+=to_string(w+1);
+						tmpstr+=to_string(w+1);
 						
-						eqj+=to_string(currentIndex[w]+1);;
+						tmpstr+=to_string(currentIndex[w]+1);;
 						
 					}
-					
+					if(validcur){
+						eqj = tmpstr+eqj;
+					}
 				}	
-				eqj += " - ( "+ eq0 + " );";
-				eqs.push_back(string(eqj.c_str()));
+				if(cntcure==0){
+					eq0=eqj;
+				}
+				else{
+					eqj += " - ( "+ eq0 + " );";
+					eqs.push_back(string(eqj.c_str()));
+				}
+				cntcure++;
 			}
 		}
 		for(int i=0;i<n;++i){
 			string eo;
 			for(int j=0;j<kn[i];++j){
+				iter = idset.find(pair<int,int>(i,j));
+				if(iter==idset.end()){
+					continue;
+				}
 				eo+="x";
 				eo+=to_string(i+1);
 				eo+=to_string(j+1);
 				eo+=" + ";
-				
-				
-				sprintf(num, "r%d%d * x%d%d ;",i+1,j+1,i+1,j+1);
-				eqs.push_back(string(num));
 			}
-			eo+=" - 1;";
+			eo+=" 0 - 1;";
 			eqs.push_back(string(eo.c_str()));
 		}
+		/*printf("num eqs %d\n", num_eq);
 		for(int i=0;i<eqs.size();++i){
 			printf("%s\n", eqs[i].c_str());
-		}
+		}*/
 		
 		pstream phc; // for running phc
 		phc.open("./phc -b");
@@ -187,7 +203,7 @@ int main(int argc, char** argv)
 		{
 			printf("Could not open the phc pack executable.\n");
 		}
-		printf("n=%d\n",eqs.size());
+		//printf("n=%d\n",eqs.size());
 			// start inputting
 		phc << "n" << endl; // is system on input file? no
 		phc << num_eq << endl; // number of polynomials
