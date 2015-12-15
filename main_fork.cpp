@@ -123,7 +123,6 @@ int main(int argc, char** argv)
 	printf("%d\n",cpid);
 	int count;
 	for(count=0;count<combnum;++count){
-	
 		num_eq = 0;
 		int valid = 1;
 		for(int cnt=0;cnt<n;++cnt){
@@ -131,6 +130,7 @@ int main(int argc, char** argv)
 			if(curmask==0)count+=(1<<shiftall[cnt]);
 		} 
 		if(hs(double(count))%n_sz!=cpid)continue;
+		if(count>combnum)break;
 		idset.clear();
 		eqs.clear();
 		for(int i=0;i<n;++i){
@@ -144,8 +144,6 @@ int main(int argc, char** argv)
 			}
 		}
 		for(int i=0;i<n;++i){
-			
-
 			int done = 0;
 			int cntcure = 0;
 			for(int j=0;j<kn[i];++j){
@@ -250,6 +248,7 @@ int main(int argc, char** argv)
 					phc >> opstr;//:
 					//phc >> opstr;
 					bool done=1;
+					
 					for(int i=0;i<num_eq;++i){
 						string vname;
 						double reald,compd;
@@ -257,6 +256,10 @@ int main(int argc, char** argv)
 						phc >> opstr; //: skip
 						phc >> reald;
 						phc >> compd;
+						if(vname.length()<3){
+							done=0;
+							break;
+						}
 						if(reald<MZERO){
 							done=0;
 							//printf("%f\n",reald);
@@ -269,11 +272,12 @@ int main(int argc, char** argv)
 							break;
 						}
 						solution[i] = reald;
-						//printf("%d %d\n",vname.c_str()[1]-'0',vname.c_str()[2]-'0' );
+						
 						res[vname.c_str()[1]-'1'][vname.c_str()[2]-'1']=reald;
 						varname.push_back(vname);
 						
 					}
+					
 					if(done){
 						set<pair<int,int>>::iterator loopiter;
 						int valid=0;
@@ -316,7 +320,7 @@ int main(int argc, char** argv)
 								probme += curprob*util[cpcurk][ci];
 							}
 							
-							
+
 							for(int oj =0 ;oj< kn[ci];++oj){
 								double probother =0;
 								iter = idset.find(pair<int,int>(ci,oj));
@@ -342,7 +346,6 @@ int main(int argc, char** argv)
 									}
 									probother += curprob*util[cpcurk][ci];
 								}
-								
 								if(probother-probme>PZERO){
 									//printf("check prob %d %d with %d: %f, %f\n", ci,cj, oj, probme,probother);
 									//fflush(stdout);
@@ -365,6 +368,7 @@ int main(int argc, char** argv)
 			}
 			
 		}
+
 		phc.clear();
 		phc.close();
 		
